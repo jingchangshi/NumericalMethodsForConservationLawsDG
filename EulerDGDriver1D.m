@@ -2,10 +2,12 @@
 clear all
 
 % Order of method (m), number of elements (N)
-m=1; N=256;
+m=3; N=400;
     
 % Set problem parameters
-FinalTime = 1.8; CFL = 0.1; gamma = 1.4;
+% FinalTime = 1.8;
+FinalTime = 0.0055;
+CFL = 0.1; gamma = 1.4;
 
 % Define domain, materials and initial conditions
 r = zeros(m+1,N); ru = zeros(m+1,N); E = zeros(m+1,N);
@@ -23,7 +25,8 @@ h = (xmax-xmin)/N;
 % E = ((x<0.5) + (x>=0.5)*0.1)/(gamma-1);
 
 % Initialize for shock entropy problem
-r = (x<-4)*3.857143 + (x>=-4).*(1+0.2*sin(pi*x));
+% r = (x<-4)*3.857143 + (x>=-4).*(1+0.2*sin(pi*x));
+r = (x<-4)*3.857143 + (x>=-4).*(1+0.2*sin(5.0*x));
 ru = (x<-4)*3.857143*2.629369;
 p = (x<-4)*10.33333 + (x>=-4);
 E = p/(gamma-1) + 0.5*ru.^2./r;

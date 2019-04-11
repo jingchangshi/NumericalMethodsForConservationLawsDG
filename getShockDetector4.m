@@ -1,0 +1,25 @@
+function phi_arr = getShockDetector4(u,w,h,VtoE)
+  w_mat = repmat(w,1,size(u,2));
+  u_cm = sum(w_mat .* u * h/2.0,1)/h;
+  u_cm_max = zeros(size(u_cm));
+  u_cm_min = zeros(size(u_cm));
+  u_cm_max(2:end-1) = max([u_cm(1:end-2); u_cm(2:end-1); u_cm(3:end)]);
+  u_cm_min(2:end-1) = min([u_cm(1:end-2); u_cm(2:end-1); u_cm(3:end)]);
+  u_cm_max(1) = max([u_cm(end), u_cm(1), u_cm(2)]);
+  u_cm_max(end) = max([u_cm(end-1), u_cm(end), u_cm(1)]);
+  u_cm_min(1) = min([u_cm(end), u_cm(1), u_cm(2)]);
+  u_cm_min(end) = min([u_cm(end-1), u_cm(end), u_cm(1)]);
+  u_cm_diff_max = u_cm_max - u_cm;
+  u_cm_diff_min = u_cm_min - u_cm;
+  [ue] = extendDG(u(VtoE),'P',0,'P',0);
+  eps_zero=1E-12;
+  idx_pos_arr2 = ue(:,2:size(u_cm_max)+1) - repmat(u_cm_max,2,1) > eps_zero;
+  idx_neg_arr2 = ue(:,2:size(u_cm_max)+1) - repmat(u_cm_min,2,1) < -eps_zero;
+  u_cm_diff_fp2 = ue(:,2:size(u_cm_max)+1) - repmat(u_cm,2,1);
+  u_diff_ratio2 = zeros(2,size(u_cm,2));
+  u_cm_diff_max2 = repmat(u_cm_diff_max,2,1);
+  u_cm_diff_min2 = repmat(u_cm_diff_min,2,1);
+  u_diff_ratio2(idx_pos_arr2) = u_cm_diff_max2(idx_pos_arr2) ./ u_cm_diff_fp2(idx_pos_arr2);
+  u_diff_ratio2(idx_neg_arr2) = u_cm_diff_min2(idx_neg_arr2) ./ u_cm_diff_fp2(idx_neg_arr2);
+  phi_arr = min(u_diff_ratio2,1);
+end

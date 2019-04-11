@@ -1,4 +1,4 @@
-function [ulimit] = WENOlimitDG(x,u,m,h,N,V,iV,Q,Xm,Xp);
+function [ulimit] = WENOlimitDG(x,u,m,h,N,V,iV,Q,Xm,Xp,shock_detector,ids)
 % function ulimit = WENOlimitDG(x,u,m,h,N,V,iV,Q,Xm,Xp);
 % Purpose: Apply WENO limiter by Zhong-Shu (2013) 
 % to u - an m'th order polynomial    
@@ -24,11 +24,30 @@ Ph = iV*Pp; Ph(1,:)=0; Pp = V*Ph;
 uel = u(1,:); uer = u(end,:); 
 vj = ucell; vjm = ve(1:N); vjp = ve(3:N+2);
 
+ShockDetector=4;
 % Find elements that require limiting
-vel = vj - minmod([(vj-uel)' (vj-vjm)' (vjp-vj)'])';
-ver = vj + minmod([(uer-vj)' (vj-vjm)' (vjp-vj)'])';
-ids = find(abs(vel-uel)>eps0 | abs(ver-uer)>eps0); 
-
+if(ShockDetector==1)
+  vel = vj - minmod([(vj-uel)' (vj-vjm)' (vjp-vj)'])';
+  ver = vj + minmod([(uer-vj)' (vj-vjm)' (vjp-vj)'])';
+  ids = find(abs(vel-uel)>eps0 | abs(ver-uer)>eps0);
+elseif(ShockDetector==2)
+  % P3-NC400-CFL0.1-M10 is good.
+  % P3-NC400-CFL0.2-M10 blows up.
+  % P3-NC400-CFL0.1-M100,50 blows up.
+  M=10;
+  vel = vj - minmodTVB([(vj-uel)' (vj-vjm)' (vjp-vj)'],M,h)';
+  ver = vj + minmodTVB([(uer-vj)' (vj-vjm)' (vjp-vj)'],M,h)';
+  ids = find(abs(vel-uel)>eps0 | abs(ver-uer)>eps0); 
+elseif(ShockDetector==3) % blows up.
+  se=getSmoothnessIndicatorDG(u,iV,m);
+  s0=-1;
+  kappa=1;
+  % nu1 = ((s0-kappa)<=se).*(se<=(s0+kappa));
+  % nu2 = (se>(s0+kappa));
+  ids=find(se>(s0-kappa));
+elseif(ShockDetector==4) % MINMAX
+   % do nothing
+end
 % Apply limiting when needed
 if(~isempty(ids))
     % Extract local polynomials

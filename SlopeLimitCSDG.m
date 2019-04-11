@@ -18,8 +18,11 @@ uel = u(1,:); uer = u(end,:);
 vj = ucell; vjm = ve(1:N); vjp = ve(3:N+2);
 
 % Find elements that require limiting
-vel = vj - minmod([(vj-uel)' (vj-vjm)' (vjp-vj)'])';
-ver = vj + minmod([(uer-vj)' (vj-vjm)' (vjp-vj)'])';
+% vel = vj - minmod([(vj-uel)' (vj-vjm)' (vjp-vj)'])';
+% ver = vj + minmod([(uer-vj)' (vj-vjm)' (vjp-vj)'])';
+M=100; % P3-NC400-CFL0.1-M100 is good.
+vel = vj - minmodTVB([(vj-uel)' (vj-vjm)' (vjp-vj)'],M,h)';
+ver = vj + minmodTVB([(uer-vj)' (vj-vjm)' (vjp-vj)'],M,h)';
 ids = find(abs(vel-uel)>eps0 | abs(ver-uer)>eps0); 
 
 % Apply limiting when needed
